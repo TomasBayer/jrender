@@ -1,0 +1,35 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+import argparse
+import collections
+import jinja2
+import os
+import sys
+import yaml
+
+# Parse args
+parser =  argparse.ArgumentParser()
+parser.add_argument('template', metavar='TEMPLATE', type=str, help="jinja template file")
+
+args = parser.parse_args()
+template_file = os.path.expanduser(args.template)
+
+if not os.path.isfile(template_file):
+    sys.exit('"{}" is not a file.'.format(template_file))
+
+try:
+    with open(template_file) as f:
+        template = jinja2.Template(f.read())
+except jinja2.exceptions.TemplateSyntaxError as e:
+    sys.exit('Template is invalid Jinja2: {}'.format(e))
+
+try:
+    data = yaml.load(sys.stdin)
+except yaml.YAMLError as exc:
+    sys.exit('Input data is not valid YAML/JSON.')
+
+if not isinstance(data, collections.abc.Mapping):
+    sys.exit('Input data is not a valid YAML/JSON dictionary')
+
+print(template.render(**data))
