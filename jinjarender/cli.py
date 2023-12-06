@@ -7,9 +7,9 @@ import jinja2
 import typer
 import yaml
 from click import ClickException
-from jinja2 import Environment
+from jinja2 import ChainableUndefined, Environment, StrictUndefined, Undefined
 
-app = typer.Typer()
+app = typer.Typer(rich_markup_mode="rich")
 
 
 @dataclass
@@ -27,7 +27,15 @@ class Mapping:
     help="Renders the Jinja template given in TEMPLATE_FILE using a context built from YAML files and "
          "mappings supplied on the command line.",
     epilog="In case context variables appear in multiple YAML files, values from subsequent files take precedence. "
-           "Values explicitly specified always take precedence over values from YAML files.",
+           "Values explicitly specified always take precedence over values from YAML files.\n\n\n\n"
+           "Any variables referenced in the template but not provided in the context will be treated based on the "
+           "specified mode:\n\n\n\n"
+           "[yellow bold]STRICT MODE[/yellow bold]: Undefined variables can only be checked for definedness. "
+           "Any other access raises an error.\n\n"
+           "[yellow bold]DEFAULT MODE[/yellow bold]: Undefined variables are treated as an empty string when printed "
+           "and as an empty list when iterated over. Any other access raises an error.\n\n"
+           "[yellow bold]LENIENT MODE[/yellow bold]: In addition to the default mode, attribute access and indexing "
+           "are allowed, and they return a new undefined variable which is then also treated in LENIENT MODE.",
 )
 def render(
         *,
@@ -43,10 +51,27 @@ def render(
             "--context-file", '-f',
             help="Path to a YAML context file. (optional, multiple may be given)",
         )] = None,
+        strict: Annotated[bool, typer.Option(
+            "--strict", '-s',
+            help="Strict mode. Forbids access of undefined variables (see below).",
+        )] = False,
+        lenient: Annotated[bool, typer.Option(
+            "--lenient", '-l',
+            help="Lenient mode. Allows indexing and attribute access of undefined variables (see below).",
+        )] = False,
 ):
+    # Build undefined variable
+    if strict:
+        undefined = StrictUndefined
+    elif lenient:
+        undefined = ChainableUndefined
+    else:
+        undefined = Undefined
+
     # Build environment
     env = Environment(
         autoescape=False,  # noqa: S701
+        undefined=undefined,
     )
 
     # Build template
@@ -75,4 +100,7 @@ def render(
         context[mapping.key] = mapping.value
 
     # Render template with context
-    print(template.render(**context))  # noqa: T201
+    try:
+        print(template.render(**context))  # noqa: T201
+    except jinja2.exceptions.UndefinedError as err:
+        raise ClickException(f"The context is missing a name used in the template: {err.message}") from err
