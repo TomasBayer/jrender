@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "jinjarender"
+name = "jrender"
 version = "1.0"
 description = ""
 authors = ["Tomas Bayer <mail@tomas.berlin>"]
@@ -7,7 +7,7 @@ readme = "README.md"
 license = "MIT"
 
 [tool.poetry.scripts]
-jinjarender = 'jinjarender.cli:app'
+jrender = 'jrender.cli:app'
 
 [tool.poetry.dependencies]
 python = "^3.9"
