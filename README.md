@@ -1,5 +1,7 @@
 # jrender
 
+[![PyPI - Version](https://img.shields.io/pypi/v/jrender)](https://pypi.org/project/jrender/)
+
 `jrender` is a command-line tool that renders [Jinja template files](https://jinja.palletsprojects.com/) using a
 context built from YAML files and mappings supplied on the command line. It is primarily designed for quickly testing
 template files.
