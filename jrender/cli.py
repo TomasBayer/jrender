@@ -51,6 +51,10 @@ def render(
             "--context-file", '-f',
             help="Path to a YAML context file. (optional, multiple may be given)",
         )] = None,
+        extensions: Annotated[Optional[list[str]], typer.Option(
+            "--extension", '-e',
+            help="Import path of a Jinja2 extension (optional, multiple may be given)",
+        )] = None,
         strict: Annotated[bool, typer.Option(
             "--strict", '-s',
             help="Strict mode. Forbids access of undefined variables (see below).",
@@ -72,6 +76,7 @@ def render(
     env = Environment(
         autoescape=False,  # noqa: S701
         undefined=undefined,
+        extensions=extensions,
     )
 
     # Build template
